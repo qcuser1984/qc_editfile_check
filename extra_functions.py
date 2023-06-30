@@ -18,7 +18,7 @@ def get_sequence(path_to_dir,sequence_nb):
     try:
         my_list = [os.path.join(dirs, file) for dirs, subdirs, files in os.walk(path_to_dir) for file in files if file.endswith(".S01")]
         if len(my_list)>0:
-            my_files = [file for file in my_list if name_to_numbers(os.path.split(file)[1])[3] == int(sequence_nb)]
+            my_files = [file for file in my_list if name_to_numbers(os.path.basename(file))[3] == int(sequence_nb)]
             return(my_files)
         else:
             print(f"No sps for {sequnce_nb}")
@@ -35,13 +35,11 @@ def get_all_sps(path_to_dir):
         except Exception as exc:
             print(f"Couldn't make the lsit of SPS, d/t: {exc}")
 
-
-
 def get_sequence_by_nb(sps_list,seq_nb):
     if len(sps_list) > 0:
         unq_seq_list = set([name_to_numbers(os.path.split(file)[1])['sequence'] for file in sps_list])
         if seq_nb in unq_seq_list:
-            seq_files = [file for file in sps_list if name_to_numbers(os.path.split(file)[1])['sequence'] == seq_nb ]
+            seq_files = [file for file in sps_list if name_to_numbers(os.path.basename(file))['sequence'] == seq_nb ]
             return seq_files
         else:
             print(f'Sequence {seq_nb} not in provided list of paths ')

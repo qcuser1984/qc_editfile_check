@@ -14,7 +14,8 @@ from extra_functions import get_all_sps, get_sequence_by_nb, name_to_numbers
 def read_shots_edits(path_to_file):
     if os.path.exists(path_to_file):
         try:
-            df_out = pd.read_csv(path_to_file)
+            df_out = pd.read_csv(path_to_file, skiprows = 1,
+            names = ['line','sequence','point','index','jd','code','qc_skips','missed_shots','total_skips','comment'])
             return df_out
         except Exception as exc:
             print(f"Something went wrong: {exc}")
@@ -24,20 +25,14 @@ def read_shots_edits(path_to_file):
 
 def get_sequence(df_in, seq):
     if isinstance(df_in, pd.DataFrame):
-        if int(seq) in df_in.Sequence.unique(): 
-            df_out = df_in[df_in["Sequence"] == int(seq)]
+        if int(seq) in df_in.sequence.unique(): 
+            df_out = df_in[df_in["sequence"] == int(seq)]
             return(df_out)
         else:
             print(f"Sequence {seq} not found: either 0 flagged sp or it hasn't been added")
             return None
     else:
         return None
-
-def spin_the_wheel():
-    for f in cycle(r"-\|/-\|/"):
-        print('\r', f, sep ='', end='', flush = True)
-        sleep(0.2)
-
 
 def main():
     sps_list = get_all_sps(path_to_sps_dir)
@@ -131,7 +126,7 @@ def main():
     
     
     #QC shot edit files block
-    print(f"\n{os.path.split(prod_shot_edit)[1]} Sequence {seq_nb}")
+    print(f"\n{os.path.split(prod_shot_edit)[1]}: sequence {seq_nb}\n")
     
     shots_edit = read_shots_edits(prod_shot_edit)
     seq_df = get_sequence(shots_edit, seq_nb)
@@ -142,14 +137,16 @@ def main():
         pass
     
     if isinstance(seq_df, pd.DataFrame):
-        seq_df = seq_df.drop_duplicates(subset = ['Point'])
+        seq_df = seq_df.drop_duplicates(subset = ['point'])
         #print('\n')
-        gr_df = seq_df.groupby('Comment').count()
-        print(gr_df.Sequence)
-        print(f"Total: {SP_edit} SP in the edit list")
+        gr_df = seq_df.groupby(['comment'])[['code','total_skips']].count()
+        comments = [' Missing SP.', 'missed shot, no trigger']
+        remove_df = gr_df.query("comment != @comments")
+        print(gr_df)
+        to_remove = remove_df["total_skips"].sum()
+        print(f"\nTotal:\n{SP_edit} SPs in the edit list\n{to_remove} SPs to be removed (Missed SPs not counted)")
     else: 
         pass
-    print('\n')
 
 if __name__ == "__main__":
     #prod_shot_edit = r"X:\Projects\07_BR001522_ARAM_Petrobras\05_QC\03_GUNS\05_Sequences\01_Artemis_Odyssey\0256-QC_edited_shots.csv"

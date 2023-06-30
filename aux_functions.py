@@ -31,7 +31,7 @@ def th_sps_to_df(path_to_sps):
             if extension in ['.r01','.R01']:
                 df_out = pd.read_csv(path_to_sps,
                                     skiprows = sps_to_frame_skip(path_to_sps,'R'), sep = '\s+',
-                                    names = ['code','line','point','idx','easting','nothing','extras'])
+                                    names = ['code','line','point','idx','easting','northing','extras'])
                 df_out.drop(columns = ['code','extras'], inplace = True)
                 return df_out
             elif extension in ['.s01','.S01']:
@@ -115,47 +115,6 @@ def recovered_sps_to_df(path_to_sps):
         return None
 
 
-# below is depreciated function
-def update_nodes_df(df_in):
-    '''update existing df with datetime columns
-    '''
-    #check what type of rps we have in df
-    if 'recov_time' in df_in.columns:
-        
-        df_in['deploy_time_str'] = df_in['deploy_time'].astype(str)
-        df_in['deploy_time_str'] = df_in['deploy_time_str'].apply(lambda x: x.zfill(6))
-        df_in['deploy_datetime_str'] = df_in['deploy_year'].astype(str) + df_in['deploy_jd'].astype(str) + df_in['deploy_time_str']
-        df_in['deploy_dttm']  = df_in['deploy_datetime_str'].apply(lambda x: datetime.strptime(x, '%y%j%H%M%S'))
-        
-        df_in['recov_time_str'] = df_in['recov_time'].astype(str)
-        df_in['recov_time_str'] = df_in['recov_time_str'].apply(lambda x : x.zfill(6))
-        df_in['recovery_datetime_str'] = df_in['recov_year'].astype(str) + df_in['recov_jd'].astype(str) + df_in['recov_time_str']
-        df_in['recovery_dttm'] = df_in['recovery_datetime_str'].apply(lambda x : datetime.strptime(x, '%y%j%H%M%S'))
-        
-        df_in['dive_time_delta'] = (df_in['recovery_dttm'] - df_in['deploy_dttm'])
-        df_in['dive_time_days'] = df_in['dive_time_delta'].apply(lambda x: x.total_seconds()/86400)
-        df_in['dive_time_days'] = df_in['dive_time_days'].apply(lambda x: round(x,2))
-        
-        df_in.drop(columns = ['recov_time_str','deploy_time_str','recovery_datetime_str','deploy_datetime_str'], inplace =True)
-        
-        return df_in
-    
-    else:
-        df_in['deploy_time_str'] = df_in['deploy_time'].astype(str)
-        df_in['deploy_time_str'] = df_in['deploy_time_str'].apply(lambda x: x.zfill(6))
-        df_in['deploy_datetime_str'] = df_in['deploy_year'].astype(str) + df_in['deploy_jd'].astype(str) + df_in['deploy_time_str']
-        df_in['deploy_dttm']  = df_in['deploy_datetime_str'].apply(lambda x: datetime.strptime(x, '%y%j%H%M%S'))
-        
-        df_in['dive_time_delta'] = datetime.now() - df_in['deploy_dttm']
-        df_in['dive_time_days'] = df_in['dive_time_delta'].apply(lambda x: x.total_seconds()/86400)
-        df_in['dive_time_days'] = df_in['dive_time_days'].apply(lambda x: round(x,2)) 
-        
-        df_in.drop(columns = ['deploy_datetime_str','deploy_time_str'],inplace=True)
-        
-        return df_in
-
-
-
 def get_rcv_line_df(rcv_df,line_nb,short = True):
     '''return dataframe for particular receiver line'''
     if int(line_nb) in rcv_df['line'].unique():
@@ -215,7 +174,7 @@ def source_sps_to_df(path_to_sps):
                         (97,98),(98,99),(99,100),(100,101),(101,102),(103,108)  ],
             names = ['code','line','point','index','gun_depth','w_depth','easting','northing',
                     'tide','sp_jd','sp_time','sp_time_ms','sequence','azimuth','sp_year',
-                    'depth_edit','timing_edit','pressure_edit','repeatability','positioning','dither']                          
+                    'depth_edit','timing_edit','pressure_edit','repeatability','positioning','dither']
                     )
             #update df here as well
             df_out['str_time'] = df_out['sp_time'].astype(str)
